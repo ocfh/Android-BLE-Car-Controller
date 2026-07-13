@@ -1,5 +1,5 @@
 # Android-BLE-Car-Controller
-🚕 Native Java Android BLE control app for intelligent car, send custom BLE characteristic commands to STM32/ESP32 main controller
+🚕 本项目为BLE蓝牙低功耗智能小车安卓控制APP，适配 Ai-WB2-32S BLE透传模块，替代传统HC05/06串口蓝牙SPP方案，使用GATT特征值读写、Notify被动接收下位机数据。保留原SPP版本全部交互UI与控制逻辑，底层通信完整重构为BLE标准协议，支持安卓12+新版蓝牙动态权限，自动扫描附近BLE设备、一键连接、实时收发小车传感器数据。
 
 <br>
 <p align='center'>
@@ -7,12 +7,7 @@
 </p>
 <br>
 
-# BLE低功耗蓝牙智能小车安卓控制器 Readme.md
-## 项目概述
-本项目为**BLE蓝牙低功耗智能小车安卓控制APP**，适配 Ai-WB2-32S BLE透传模块，替代传统HC05/06串口蓝牙SPP方案，使用GATT特征值读写、Notify被动接收下位机数据。
-保留原SPP版本全部交互UI与控制逻辑，底层通信完整重构为BLE标准协议，支持安卓12+新版蓝牙动态权限，自动扫描附近BLE设备、一键连接、实时收发小车传感器数据。
-
-### 核心功能
+## 核心功能
 1. **BLE蓝牙管理**
     - 主动扫描周边BLE设备，自动去重展示设备名+MAC地址
     - 5秒自动停止扫描，支持手动启停扫描
