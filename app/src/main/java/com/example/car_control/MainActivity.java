@@ -1,16 +1,24 @@
 package com.example.car_control;
 
 import androidx.annotation.NonNull;
+
+import android.bluetooth.BluetoothGattDescriptor;
+import android.content.pm.PackageManager;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
-import android.app.Service;
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,8 +26,6 @@ import android.os.Message;
 import android.os.Vibrator;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -31,490 +37,471 @@ import android.widget.Toast;
 
 import com.shy.rockerview.MyRockerView;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.security.ProtectionDomain;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
+    // ========== BLE 固定UUID Ai-WB2-32S 透传 ==========
+    private static final UUID SERVICE_UUID = UUID.fromString("55e405d2-af9f-a98f-e54a-7dfe43535355");
+    private static final UUID CHAR_WRITE_UUID = UUID.fromString("16962447-c623-61ba-d94b-4d1e43535349");
+    private static final UUID CHAR_NOTIFY_UUID = UUID.fromString("b39b7234-beec-d4a8-f443-418843535349");
 
-    private UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private BluetoothDevice remoteDevice;
-    private BluetoothSocket socket;
-    private OutputStream outputStream;
-    private DataInputStream inputStream;
-    private Vibrator vibrator;
+    // BLE全局对象
+    private BluetoothAdapter mBtAdapter;
+    private BluetoothLeScanner mScanner;
+    private BluetoothGatt mBluetoothGatt;
+    private BluetoothGattCharacteristic mWriteChar;
+    private final List<BluetoothDevice> mDeviceList = new ArrayList<>();
+    private ArrayAdapter<String> mSpinnerAdapter;
+    private boolean isScanning = false;
+
+    // UI控件
     private SeekBar seekBar2;
-
+    private Vibrator vibrator;
     private Spinner myspinner;
-    private BluetoothAdapter defaultAdapter;
-    private String address;
-    private TextView textViewwdbz,text_show,textView,textViewdy,textView2,textViewwdb2z,text_show873,text_show5432,textViewwdb21z;
+    private TextView textViewwdbz, text_show, textView, textViewdy, textView2, textViewwdb2z, text_show873, text_show5432, textViewwdb21z;
     private MyRockerView rockerView;
-    private ImageView imageView8,imageView39,imageView319,imageView932,imageView3419,imageView3319,imageView9,imageView9543;
+    private ImageView imageView8, imageView39, imageView319, imageView932, imageView3419, imageView3319, imageView9, imageView9543;
     private ImageButton imageView379;
-    private int speed=1,date=0,stop=0,left=0,right=0;
-    private Handler handler = new Handler(){
+    private Button btn_scan_ble;
+
+    // 控制参数
+    private int speed = 1, stop = 0, left = 0, right = 0;
+
+    // UI数据接收Handler（原有解析逻辑完全保留）
+    private final Handler handler = new Handler() {
         @Override
         public void handleMessage(@NonNull Message msg) {
-            StringBuffer stringBuffer = new StringBuffer();
-            StringBuffer adc = new StringBuffer();
-            StringBuffer sr04 = new StringBuffer();
-            StringBuffer wendu = new StringBuffer();
-            StringBuffer wendu2 = new StringBuffer();
-            if (msg.what == 0x1234){
-                byte[] obj = (byte[])msg.obj;
-                for (int i=0;i<13;i++) {
-                    String s = String.format("%c",obj[i]);
-                    stringBuffer.append(s);
-                }
-                adc.append(String.format("%c",obj[0]));
-                adc.append(String.format("%c",obj[1]));
-                adc.append(String.format("%c",obj[2]));
-                adc.append(String.format("%c",obj[3]));
-                sr04.append(String.format("%c",obj[4]));
-                sr04.append(String.format("%c",obj[5]));
-                sr04.append(String.format("%c",obj[6]));
-                sr04.append(String.format("%c",obj[7]));
-                wendu.append(String.format("%c",obj[8]));
-                wendu.append(String.format("%c",obj[9]));
-                wendu2.append(String.format("%c",obj[10]));
-                wendu2.append(String.format("%c",obj[11]));
+            if (msg.what == 0x1234) {
+                byte[] obj = (byte[]) msg.obj;
+                if (obj == null || obj.length < 12) return;
 
-                    textViewdy.setText("电压:");
-                    textViewdy.append(adc);
-                    textViewdy.append("mV");
+                StringBuilder adc = new StringBuilder();
+                StringBuilder sr04 = new StringBuilder();
+                StringBuilder wendu = new StringBuilder();
+                StringBuilder wendu2 = new StringBuilder();
 
+                adc.append((char) obj[0]).append((char) obj[1]).append((char) obj[2]).append((char) obj[3]);
+                sr04.append((char) obj[4]).append((char) obj[5]).append((char) obj[6]).append((char) obj[7]);
+                wendu.append((char) obj[8]).append((char) obj[9]);
+                wendu2.append((char) obj[10]).append((char) obj[11]);
 
-                    textViewwdbz.setText("测距:");
-                    textViewwdbz.append(sr04);
-                    textViewwdbz.append("cm");
-
-                textViewwdb2z.setText("温度:");
-                textViewwdb2z.append(wendu);
-                textViewwdb2z.append(".");
-                textViewwdb2z.append(wendu2);
-                textViewwdb2z.append("°C");
-              //  textViewwdb21z.setText(stringBuffer);
+                textViewdy.setText("电压:" + adc + "mV");
+                textViewwdbz.setText("测距:" + sr04 + "cm");
+                textViewwdb2z.setText("温度:" + wendu + "." + wendu2 + "°C");
             }
-
         }
     };
+
+    // BLE GATT 通信回调（替代旧读取线程）
+    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            if (newState == BluetoothGatt.STATE_CONNECTED) {
+                // 连接成功，发现服务
+                gatt.discoverServices();
+            } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "蓝牙断开连接", Toast.LENGTH_SHORT).show());
+                mWriteChar = null;
+                if (mBluetoothGatt != null) {
+                    mBluetoothGatt.close();
+                    mBluetoothGatt = null;
+                }
+            }
+        }
+
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "服务发现失败", Toast.LENGTH_SHORT).show());
+                gatt.disconnect();
+                return;
+            }
+            BluetoothGattService service = gatt.getService(SERVICE_UUID);
+            if (service == null) {
+                // 关键：找不到服务主动断开GATT，避免僵死连接
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "未找到WB2透传服务", Toast.LENGTH_SHORT).show());
+                gatt.disconnect();
+                return;
+            }
+            mWriteChar = service.getCharacteristic(CHAR_WRITE_UUID);
+            BluetoothGattCharacteristic notifyChar = service.getCharacteristic(CHAR_NOTIFY_UUID);
+            boolean notifyEnable = gatt.setCharacteristicNotification(notifyChar, true);
+            if (!notifyEnable) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "开启通知特征失败", Toast.LENGTH_SHORT).show());
+                gatt.disconnect();
+                return;
+            }
+            BluetoothGattDescriptor descriptor = notifyChar.getDescriptor(
+                    UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
+            if (descriptor != null) {
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                gatt.writeDescriptor(descriptor);
+            } else {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "无通知描述符", Toast.LENGTH_SHORT).show());
+                gatt.disconnect();
+            }
+        }
+
+        // 监听Descriptor写入结果，成功才算真正连接完成
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "BLE连接成功！", Toast.LENGTH_SHORT).show());
+            } else {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "开启通知失败，断开", Toast.LENGTH_SHORT).show());
+                gatt.disconnect();
+            }
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            if (CHAR_NOTIFY_UUID.equals(characteristic.getUuid())) {
+                byte[] buffer = characteristic.getValue();
+                Message msg = Message.obtain();
+                msg.what = 0x1234;
+                msg.obj = buffer;
+                handler.sendMessage(msg);
+            }
+        }
+    };
+
+    // BLE扫描回调
+    private final ScanCallback mScanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            BluetoothDevice dev = result.getDevice();
+            // 设备去重
+            boolean exist = false;
+            for (BluetoothDevice d : mDeviceList) {
+                if (d.getAddress().equals(dev.getAddress())) {
+                    exist = true;
+                    break;
+                }
+            }
+            if (!exist) {
+                mDeviceList.add(dev);
+                String name = dev.getName() == null ? "未知设备" : dev.getName();
+                mSpinnerAdapter.add(name + " | " + dev.getAddress());
+                mSpinnerAdapter.notifyDataSetChanged();
+            }
+        }
+    };
+
+    // 统一BLE发送指令方法（替换所有outputStream.write）
+    private void sendBleData(byte[] data) {
+        if (mBluetoothGatt == null || mWriteChar == null) {
+            runOnUiThread(() -> Toast.makeText(MainActivity.this, "未连接蓝牙，请等待服务加载完成", Toast.LENGTH_SHORT).show());
+            return;
+        }
+        mWriteChar.setValue(data);
+        // Ai-WB2必须配置无响应写入，否则极易断开
+        mWriteChar.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+        mBluetoothGatt.writeCharacteristic(mWriteChar);
+    }
+
+    // 开始/停止扫描BLE设备
+    private void toggleScan() {
+        if (!isScanning) {
+            mDeviceList.clear();
+            mSpinnerAdapter.clear();
+            mScanner.startScan(mScanCallback);
+            isScanning = true;
+            btn_scan_ble.setText("停止扫描");
+            Toast.makeText(this, "正在扫描BLE设备...", Toast.LENGTH_SHORT).show();
+            // 自动扫描5秒后停止
+            new Handler().postDelayed(() -> {
+                if (isScanning) toggleScan();
+            }, 5000);
+        } else {
+            mScanner.stopScan(mScanCallback);
+            isScanning = false;
+            btn_scan_ble.setText("扫描BLE设备");
+            Toast.makeText(this, "扫描结束", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WindowManager.LayoutParams lp=getWindow().getAttributes();
-        lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-        getWindow().setAttributes(lp);
-
         setContentView(R.layout.activity_main);
-        seekBar2=(SeekBar)findViewById(R.id.seekBar2);
-        vibrator = (Vibrator)getSystemService(Service.VIBRATOR_SERVICE);
-        myspinner = (Spinner)findViewById(R.id.myspinner);
-        imageView8=(ImageView)findViewById(R.id.imageView8);
-        imageView39=(ImageView)findViewById(R.id.imageView39);
-        imageView319=(ImageView)findViewById(R.id.imageView319);
-        imageView9=(ImageView)findViewById(R.id.imageView9);
-        imageView3419=(ImageView)findViewById(R.id.imageView3419);
-        imageView3319=(ImageView)findViewById(R.id.imageView3319);
-        imageView9543=(ImageView)findViewById(R.id.imageView9543);
-        imageView379=(ImageButton)findViewById(R.id.imageView379);
-        imageView932=(ImageView)findViewById(R.id.imageView932);
-        text_show = (TextView)findViewById(R.id.text_show);
-        textViewwdb21z = (TextView)findViewById(R.id.textViewwdb21z);
-        textViewdy = (TextView)findViewById(R.id.textViewdy);
-        textViewwdb2z = (TextView)findViewById(R.id.textViewwdb2z);
-        textViewwdbz = (TextView)findViewById(R.id.textViewwdbz);
-        textView2 = (TextView)findViewById(R.id.textView2);
-        text_show873 = (TextView)findViewById(R.id.text_show873);
-        text_show5432 = (TextView)findViewById(R.id.text_show5432);
-        rockerView=(MyRockerView)findViewById(R.id.rocker_view);
-        textView=(TextView) findViewById(R.id.textView);
-        defaultAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (defaultAdapter == null){
-            Toast.makeText(MainActivity.this,
-                    "当前设备蓝牙不可用",
-                    Toast.LENGTH_SHORT).show();
+
+        // 权限申请
+        requestBlePermission();
+
+        // 初始化蓝牙适配器
+        mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBtAdapter == null) {
+            Toast.makeText(this, "设备无蓝牙", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
+        if (!mBtAdapter.isEnabled()) mBtAdapter.enable();
+        mScanner = mBtAdapter.getBluetoothLeScanner();
 
-        defaultAdapter.enable();
+        // 绑定控件
+        bindViews();
 
-        if (!defaultAdapter.isEnabled()){
-            Toast.makeText(MainActivity.this,
-                    "蓝牙使能失败！",
-                    Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
+        // Spinner初始化
+        mSpinnerAdapter = new ArrayAdapter<>(this, R.layout.spinner_res);
+        myspinner.setAdapter(mSpinnerAdapter);
 
-        Set<BluetoothDevice> bondedDevices = defaultAdapter.getBondedDevices();
+        imageView3419.setColorFilter(0xFF888888);
+        imageView3319.setColorFilter(0xFF888888);
 
-        if (bondedDevices.size() < 1){
-            Toast.makeText(MainActivity.this,
-                    "当前安卓系统蓝牙连接设备数量为零！",
-                    Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
+        // 扫描按钮点击
+        btn_scan_ble.setOnClickListener(v -> toggleScan());
 
-        String[] str = new String[bondedDevices.size()];
-        int i = 0;
-        for (BluetoothDevice device : bondedDevices){
-            str[i++] = device.getAddress() + "";
-        }
+        // 连接按钮（imageView8）
+        imageView8.setOnClickListener(v -> {
+            int pos = myspinner.getSelectedItemPosition();
+            if (pos < 0 || pos >= mDeviceList.size()) {
+                Toast.makeText(this, "请先扫描并选择BLE设备", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            BluetoothDevice targetDev = mDeviceList.get(pos);
+            // 断开旧连接
+            if (mBluetoothGatt != null) {
+                mBluetoothGatt.disconnect();
+                mBluetoothGatt.close();
+                mBluetoothGatt = null;
+            }
+            // 建立GATT连接
+            mBluetoothGatt = targetDev.connectGatt(this, false, mGattCallback);
+        });
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this,
-                R.layout.spinner_res,str);
+        // 红外循迹
+        text_show5432.setOnClickListener(v -> {
+            sendBleData(new byte[]{0x09});
+            vibrator.vibrate(100);
+            Toast.makeText(this, "红外循迹", Toast.LENGTH_SHORT).show();
+        });
 
-        myspinner.setAdapter(adapter);
-        imageView3419.setColorFilter(Color.GRAY);
-        imageView3319.setColorFilter(Color.GRAY);
-        textView2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(MainActivity.this,
-                        "Developed Thanks\n遥杆:RockerView@y141111\n图标:双色线性ICON@Konan君",
-                        Toast.LENGTH_SHORT).show();
+        // 锁定/解锁操作
+        text_show.setOnClickListener(v -> {
+            if (stop == 0) {
+                stop = 1;
+                vibrator.vibrate(100);
+                Toast.makeText(this, "操作锁定", Toast.LENGTH_SHORT).show();
+            } else {
+                stop = 0;
+                vibrator.vibrate(100);
+                Toast.makeText(this, "取消锁定", Toast.LENGTH_SHORT).show();
+                sendBleData(new byte[]{0x02});
+                text_show.setText("状态:停止行走");
             }
         });
-        text_show5432.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte[] bytes = {0x09};
-                try {
-                    outputStream.write(bytes);
-                    vibrator.vibrate(100);
-                    Toast.makeText(MainActivity.this,
-                            "红外循迹",
-                            Toast.LENGTH_SHORT).show();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        text_show.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(stop==0){
-                    stop=1;
-                    vibrator.vibrate(100);
-                    Toast.makeText(MainActivity.this,
-                            "操作锁定",
-                            Toast.LENGTH_SHORT).show();
-                }else{
-                    stop=0;
-                    vibrator.vibrate(100);
-                    Toast.makeText(MainActivity.this,
-                            "取消锁定",
-                            Toast.LENGTH_SHORT).show();
-                    byte[] bytes0 = {0x02};
-                    try {
-                        outputStream.write(bytes0);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    text_show.setText("状态:停止行走");
-                }
-            }
-        });
-        textViewdy.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte[] bytes = {0x14};
-                try {
-                    outputStream.write(bytes);
-                    vibrator.vibrate(100);
-                    Toast.makeText(MainActivity.this,
-                            "获取电压",
-                            Toast.LENGTH_SHORT).show();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        textViewwdbz.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
 
-            }
+        // 获取电压
+        textViewdy.setOnClickListener(v -> {
+            sendBleData(new byte[]{0x14});
+            vibrator.vibrate(100);
+            Toast.makeText(this, "获取电压", Toast.LENGTH_SHORT).show();
         });
-        imageView379.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        // 按下时的逻辑
-                        byte[] bytes = {0x12};
-                        try {
-                            outputStream.write(bytes);
-                            vibrator.vibrate(100);
-                            Toast.makeText(MainActivity.this,
-                                    "打开喇叭",
-                                    Toast.LENGTH_SHORT).show();
-                            imageView379.setBackgroundResource(R.drawable.beef);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        // 放开时的逻辑
-                        byte[] bytes2 = {0x13};
-                        try {
-                            outputStream.write(bytes2);
-                            vibrator.vibrate(100);
-                            Toast.makeText(MainActivity.this,
-                                    "关闭喇叭",
-                                    Toast.LENGTH_SHORT).show();
-                            imageView379.setBackgroundResource(R.drawable.b2);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        break;
-                }
-                return false;
-            }
-        });
-        imageView3419.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte[] bytes = {0x10};
-                try {
-                    outputStream.write(bytes);
+
+        // 喇叭按键
+        imageView379.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    sendBleData(new byte[]{0x12});
                     vibrator.vibrate(100);
-                    Toast.makeText(MainActivity.this,
-                            "左转向灯",
-                            Toast.LENGTH_SHORT).show();
-                    if(left==0){
-                        left=1;
-                        imageView3419.setColorFilter(null);
-                    }else{
-                        left=0;
-                        imageView3419.setColorFilter(Color.GRAY);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        imageView3319.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte[] bytes = {0x11};
-                try {
-                    outputStream.write(bytes);
+                    imageView379.setBackgroundResource(R.drawable.beef);
+                    break;
+                case MotionEvent.ACTION_UP:
+                    sendBleData(new byte[]{0x13});
                     vibrator.vibrate(100);
-                    Toast.makeText(MainActivity.this,
-                            "右转向灯",
-                            Toast.LENGTH_SHORT).show();
-                    if(right==0){
-                        right=1;
-                        imageView3319.setColorFilter(null);
-                    }else{
-                        right=0;
-                        imageView3319.setColorFilter(Color.GRAY);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                    imageView379.setBackgroundResource(R.drawable.b2);
+                    break;
+            }
+            return false;
+        });
+
+        // 左转向灯
+        imageView3419.setOnClickListener(v -> {
+            sendBleData(new byte[]{0x10});
+            vibrator.vibrate(100);
+            if (left == 0) {
+                left = 1;
+                imageView3419.clearColorFilter();
+            } else {
+                left = 0;
+                imageView3419.setColorFilter(0xFF888888);
             }
         });
-        text_show873.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte[] bytes = {0x08};
-                try {
-                    outputStream.write(bytes);
-                    vibrator.vibrate(100);
-                    Toast.makeText(MainActivity.this,
-                            "超声波传感器",
-                            Toast.LENGTH_SHORT).show();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+
+        // 右转向灯
+        imageView3319.setOnClickListener(v -> {
+            sendBleData(new byte[]{0x11});
+            vibrator.vibrate(100);
+            if (right == 0) {
+                right = 1;
+                imageView3319.clearColorFilter();
+            } else {
+                right = 0;
+                imageView3319.setColorFilter(0xFF888888);
             }
         });
-        imageView39.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte[] bytes = {0x06};
-                try {
-                    outputStream.write(bytes);
-                    vibrator.vibrate(100);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if(speed!=5){
-                    speed+=1;
-                    seekBar2.setProgress(speed-1);
-                    textView.setText("速度:"+speed+"档");
-                }
+
+        // 超声波
+        text_show873.setOnClickListener(v -> {
+            sendBleData(new byte[]{0x08});
+            vibrator.vibrate(100);
+            Toast.makeText(this, "超声波传感器", Toast.LENGTH_SHORT).show();
+        });
+
+        // 速度+
+        imageView39.setOnClickListener(v -> {
+            sendBleData(new byte[]{0x06});
+            vibrator.vibrate(100);
+            if (speed != 5) {
+                speed++;
+                seekBar2.setProgress(speed - 1);
+                textView.setText("速度:" + speed + "档");
             }
         });
-        imageView319.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte[] bytes = {0x07};
-                try {
-                    outputStream.write(bytes);
-                    vibrator.vibrate(100);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if(speed!=1){
-                    speed-=1;
-                    seekBar2.setProgress(speed-1);
-                    textView.setText("速度:"+speed+"档");
-                }
+
+        // 速度-
+        imageView319.setOnClickListener(v -> {
+            sendBleData(new byte[]{0x07});
+            vibrator.vibrate(100);
+            if (speed != 1) {
+                speed--;
+                seekBar2.setProgress(speed - 1);
+                textView.setText("速度:" + speed + "档");
             }
         });
+
+        // 速度滑动条
         seekBar2.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (progress+1 > speed) {
-                    // i > 0 时，发送0x06指令i次
-                    for (int count = 0; count < progress+1-speed; count++) {
-                        byte[] bytes = {0x06};
-                        try {
-                            outputStream.write(bytes);
-                            vibrator.vibrate(100);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                int targetSpeed = progress + 1;
+                if (targetSpeed > speed) {
+                    for (int i = 0; i < targetSpeed - speed; i++) {
+                        sendBleData(new byte[]{0x06});
+                        vibrator.vibrate(30);
                     }
-                } else if (progress+1 < speed) {
-                    // i < 0 时，发送0x07指令-i次（因为循环不能有负数，所以我们取绝对值）
-                    for (int count = 0; count < speed-progress-1; count++) {
-                        byte[] bytes = {0x07};
-                        try {
-                            outputStream.write(bytes);
-                            vibrator.vibrate(100);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                } else if (targetSpeed < speed) {
+                    for (int i = 0; i < speed - targetSpeed; i++) {
+                        sendBleData(new byte[]{0x07});
+                        vibrator.vibrate(30);
                     }
                 }
-                speed=progress+1;
-                textView.setText("速度:"+speed+"档");
+                speed = targetSpeed;
+                textView.setText("速度:" + speed + "档");
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStartTrackingTouch(SeekBar seekBar) {}
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
-        imageView8.setOnClickListener(new View.OnClickListener() {
+
+        // 摇杆控制
+        rockerView.setOnShakeListener(MyRockerView.DirectionMode.DIRECTION_4_ROTATE_45, new MyRockerView.OnShakeListener() {
             @Override
-            public void onClick(View v) {
-                address = myspinner.getSelectedItem().toString();
+            public void onStart() {}
 
-
-                try {
-                    remoteDevice = defaultAdapter.getRemoteDevice(address);
-                    socket = remoteDevice.createRfcommSocketToServiceRecord(uuid);
-                    socket.connect();
-                    outputStream = socket.getOutputStream();
-                    inputStream = new DataInputStream(
-                            new BufferedInputStream(socket.getInputStream()));
-                    Toast.makeText(MainActivity.this,
-                            "蓝牙连接成功！",Toast.LENGTH_SHORT).show();
-
-                    vibrator.vibrate(100);
-
-                    bluetooth_socketMSG bluetoothSocketMSG = new bluetooth_socketMSG(inputStream,handler);
-
-                    bluetoothSocketMSG.start();
-
-
-                } catch (IOException e) {
-
-                    Toast.makeText(MainActivity.this,
-                            "蓝牙连接失败！",Toast.LENGTH_SHORT).show();
-                    e.printStackTrace();
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void direction(MyRockerView.Direction direction) {
+                if (stop == 1) return;
+                switch (direction) {
+                    case DIRECTION_CENTER:
+                        sendBleData(new byte[]{'P'});
+                        text_show.setText("状态:停止行走");
+                        break;
+                    case DIRECTION_UP:
+                        sendBleData(new byte[]{'G'});
+                        vibrator.vibrate(100);
+                        text_show.setText("状态:前进" + speed + "档");
+                        break;
+                    case DIRECTION_RIGHT:
+                        sendBleData(new byte[]{'R'});
+                        vibrator.vibrate(100);
+                        text_show.setText("状态:右转" + speed + "档");
+                        break;
+                    case DIRECTION_DOWN:
+                        sendBleData(new byte[]{'B'});
+                        vibrator.vibrate(100);
+                        text_show.setText("状态:后退" + speed + "档");
+                        break;
+                    case DIRECTION_LEFT:
+                        sendBleData(new byte[]{'L'});
+                        vibrator.vibrate(100);
+                        text_show.setText("状态:左转" + speed + "档");
+                        break;
                 }
             }
+
+            @Override
+            public void onFinish() {}
         });
-       rockerView.setOnShakeListener(MyRockerView.DirectionMode.DIRECTION_4_ROTATE_45, new MyRockerView.OnShakeListener() {
-           @Override
-           public void onStart() {
-
-           }
-
-           @RequiresApi(api = Build.VERSION_CODES.O)
-           @Override
-           public void direction(MyRockerView.Direction direction) {
-               if(stop==0){
-               switch (direction){
-                   case DIRECTION_CENTER:
-                       byte[] bytes0 = {0x02};
-                       try {
-                           outputStream.write(bytes0);
-                       } catch (IOException e) {
-                           e.printStackTrace();
-                       }
-                       text_show.setText("状态:停止行走");
-                       break;
-                   case DIRECTION_UP:
-                       byte[] bytes1 = {0x01};
-                       try {
-                           outputStream.write(bytes1);
-                           vibrator.vibrate(100);
-                       } catch (IOException e) {
-                           e.printStackTrace();
-                       }
-                       text_show.setText("状态:前进"+speed+"档");
-                       break;
-                   case DIRECTION_RIGHT:
-                       byte[] bytes2 = {0x04};
-                       try {
-                           outputStream.write(bytes2);
-                           vibrator.vibrate(100);
-                       } catch (IOException e) {
-                           e.printStackTrace();
-                       }
-                       text_show.setText("状态:右转"+speed+"档");
-                       break;
-                   case DIRECTION_DOWN:
-                       byte[] bytes3 = {0x03};
-                       try {
-                           outputStream.write(bytes3);
-                           vibrator.vibrate(100);
-                       } catch (IOException e) {
-                           e.printStackTrace();
-                       }
-                       text_show.setText("状态:后退"+speed+"档");
-                       break;
-                   case DIRECTION_LEFT:
-                       byte[] bytes4 = {0x05};
-                       try {
-                           outputStream.write(bytes4);
-                           vibrator.vibrate(100);
-                       } catch (IOException e) {
-                           e.printStackTrace();
-                       }
-                       text_show.setText("状态:左转"+speed+"档");
-                       break;
-               }}
-           }
-
-           @Override
-           public void onFinish() {
-
-           }
-       });
-
-
     }
 
+    // 绑定所有控件
+    private void bindViews() {
+        seekBar2 = findViewById(R.id.seekBar2);
+        vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+        myspinner = findViewById(R.id.myspinner);
+        btn_scan_ble = findViewById(R.id.btn_scan_ble);
+        imageView8 = findViewById(R.id.imageView8);
+        imageView39 = findViewById(R.id.imageView39);
+        imageView319 = findViewById(R.id.imageView319);
+        imageView9 = findViewById(R.id.imageView9);
+        imageView3419 = findViewById(R.id.imageView3419);
+        imageView3319 = findViewById(R.id.imageView3319);
+        imageView9543 = findViewById(R.id.imageView9543);
+        imageView379 = findViewById(R.id.imageView379);
+        imageView932 = findViewById(R.id.imageView932);
+        text_show = findViewById(R.id.text_show);
+        textViewwdb21z = findViewById(R.id.textViewwdb21z);
+        textViewdy = findViewById(R.id.textViewdy);
+        textViewwdb2z = findViewById(R.id.textViewwdb2z);
+        textViewwdbz = findViewById(R.id.textViewwdbz);
+        textView2 = findViewById(R.id.textView2);
+        text_show873 = findViewById(R.id.text_show873);
+        text_show5432 = findViewById(R.id.text_show5432);
+        rockerView = findViewById(R.id.rocker_view);
+        textView = findViewById(R.id.textView);
+    }
+
+    // BLE动态权限申请
+    private void requestBlePermission() {
+        List<String> perms = new ArrayList<>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            perms.add(Manifest.permission.BLUETOOTH_SCAN);
+            perms.add(Manifest.permission.BLUETOOTH_CONNECT);
+        } else {
+            perms.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        perms.add(Manifest.permission.BLUETOOTH);
+        perms.add(Manifest.permission.BLUETOOTH_ADMIN);
+
+        List<String> needReq = new ArrayList<>();
+        for (String p : perms) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                needReq.add(p);
+            }
+        }
+        if (!needReq.isEmpty()) {
+            ActivityCompat.requestPermissions(this, needReq.toArray(new String[0]), 1001);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // 停止扫描
+        if (isScanning) mScanner.stopScan(mScanCallback);
+        // 断开BLE连接释放资源
+        if (mBluetoothGatt != null) {
+            mBluetoothGatt.disconnect();
+            mBluetoothGatt.close();
+            mBluetoothGatt = null;
+        }
+    }
 }
