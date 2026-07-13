@@ -1,0 +1,22 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.Car_control" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_200</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <!-- Status bar color. --> <item name="android:statusBarColor">#F3F4F6</item> <!-- 灰色 -->
+        <item name="android:windowFullscreen">true</item>
+
+        <!--使屏幕顶部的状态栏透明-->
+        <item name="android:windowTranslucentStatus">true</item>
+
+        <!--使屏幕底部的导航栏透明，有的手机是半透明-->
+        <item name="android:windowTranslucentNavigation">true</item>
+        <!-- Customize your theme here. -->
+    </style>
+</resources>

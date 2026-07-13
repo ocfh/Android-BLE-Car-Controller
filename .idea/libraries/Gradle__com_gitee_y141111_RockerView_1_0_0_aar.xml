@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: com.gitee.y141111:RockerView:1.0.0@aar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/04a7b7851c2d18e76b174c85fae6581d/jetified-RockerView-1.0.0/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/04a7b7851c2d18e76b174c85fae6581d/jetified-RockerView-1.0.0/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/04a7b7851c2d18e76b174c85fae6581d/jetified-RockerView-1.0.0/AndroidManifest.xml" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.gitee.y141111/RockerView/1.0.0/5c7e2df283984f718e12c1820da9299f6fa9521e/RockerView-1.0.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

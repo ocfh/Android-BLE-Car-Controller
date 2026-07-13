@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+
+    android:background="@drawable/hui"
+        >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:weightSum="3">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:weightSum="3"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:orientation="vertical"
+                >
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/yuanjiao"
+                    android:padding="5dp"
+                    android:layout_weight="1"
+                    android:layout_margin="5dp">
+
+                    <Spinner
+                        android:background="@drawable/yuanjiao"
+                        android:id="@+id/myspinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:paddingLeft="8dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_toLeftOf="@+id/imageView8"
+                        android:layout_centerVertical="true"
+                        />
+
+                    <ImageView
+                        android:id="@+id/imageView8"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:padding="11dp"
+                        android:layout_gravity="end"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/you" />
+
+                </RelativeLayout>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/yuanjiao"
+                    android:padding="5dp"
+                    android:layout_weight="1"
+                    android:layout_margin="5dp"
+                    >
+                    <ImageView
+                        android:id="@+id/imageView9"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:padding="8dp"
+                        android:layout_gravity="end"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/suo" />
+                    <TextView
+                        android:id="@+id/text_show"
+
+                        android:background="@drawable/yuanjiao"
+                        android:textColor="#536BF1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="8dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_centerVertical="true"
+                        android:textSize="20dp"
+                        android:text="状态:停止行走"/>
+                </RelativeLayout>
+            </LinearLayout>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                >
+            <com.shy.rockerview.MyRockerView
+                android:id="@+id/rocker_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:areaBackground="@color/white"
+                app:rockerBackground="#536BF1"
+                app:rockerSpeedLevel="10"
+
+                app:rockerCallBackMode="CALL_BACK_MODE_STATE_CHANGE"
+                app:rockerScale="0.5"
+                tools:ignore="MissingClass" />
+
+
+
+            </RelativeLayout>
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:weightSum="5"
+            android:orientation="vertical"
+>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/yuanjiao"
+                android:padding="5dp"
+                android:layout_weight="1"
+                android:gravity="center"
+
+                android:layout_margin="5dp"
+
+                >
+                <TextView
+                    android:id="@+id/textViewwdb21z"
+                    android:background="@drawable/yuanjiao"
+                    android:textColor="#536BF1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="28dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:textStyle="bold"
+                    android:text="小车蓝牙控制器" />
+                <TextView
+                    android:id="@+id/textView2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:textColor="#536BF1"
+                    android:textSize="8sp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:alpha="0.3"
+                    android:text="APP Developed In June 22, 2024" />
+
+            </RelativeLayout>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/yuanjiao"
+                android:padding="5dp"
+                android:layout_weight="1"
+
+                android:layout_margin="5dp"
+                android:orientation="vertical"
+                >
+                <TextView
+                    android:id="@+id/textViewwdb2z"
+                    android:background="@drawable/yuanjiao"
+                    android:textColor="#536BF1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="8dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:textSize="20dp"
+                    android:text="温度:获取温度" />
+                <ImageView
+                    android:id="@+id/imageView9433"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:padding="8dp"
+                    android:layout_gravity="end"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:src="@drawable/wd" />
+            </RelativeLayout>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/yuanjiao"
+                android:padding="5dp"
+                android:layout_weight="1"
+
+                android:layout_margin="5dp"
+                android:orientation="vertical"
+                >
+                <TextView
+                    android:id="@+id/textViewwdbz"
+                    android:background="@drawable/yuanjiao"
+                    android:textColor="#536BF1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="8dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:textSize="20dp"
+                    android:text="测距:获取测距" />
+                <ImageView
+                    android:id="@+id/imageView943"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:padding="8dp"
+                    android:layout_gravity="end"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:src="@drawable/za" />
+            </RelativeLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal"
+                >
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/yuanjiao"
+                    android:padding="5dp"
+                    android:layout_weight="1"
+
+                    android:layout_margin="2.5dp"
+                    android:orientation="vertical"
+                    >
+                    <TextView
+                        android:id="@+id/textViewdy"
+                        android:background="@drawable/yuanjiao"
+                        android:textColor="#536BF1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="8dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_centerVertical="true"
+                        android:textSize="20dp"
+                        android:text="电压:获取电压" />
+                    <ImageView
+                        android:id="@+id/imageView239"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:padding="8dp"
+                        android:layout_gravity="end"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/cj" />
+                </RelativeLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/yuanjiao"
+                android:padding="5dp"
+                android:layout_weight="1"
+                android:layout_margin="5dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                >
+                <TextView
+                    android:id="@+id/textView"
+                    android:background="@drawable/yuanjiao"
+                    android:textColor="#536BF1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="8dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:textSize="20dp"
+                    android:text="速度:1档" />
+                <SeekBar
+                    android:id="@+id/seekBar2"
+                    style="@style/Widget.AppCompat.SeekBar.Discrete"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="4"
+                    android:progressBackgroundTint="#536BF1"
+                    android:thumbTint="#536BF1"
+                    android:scrollbarSize="20dp"
+                    android:progressTint="#536BF1"
+                    android:background="@drawable/yuanjiao"
+                    android:progress="0" />
+
+            </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:weightSum="3"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:orientation="vertical"
+                >
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/yuanjiao"
+                    android:padding="5dp"
+                    android:layout_weight="1"
+                    android:layout_margin="5dp">
+
+                    <ImageView
+                        android:id="@+id/imageView932"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:padding="8dp"
+                        android:layout_gravity="end"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/ys" />
+                    <TextView
+                        android:background="@drawable/yuanjiao"
+                        android:textColor="#536BF1"
+                        android:id="@+id/text_show873"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="8dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_centerVertical="true"
+                        android:text="超声波传感器"
+                        android:textSize="20dp"/>
+
+                </RelativeLayout>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/yuanjiao"
+                    android:padding="5dp"
+                    android:layout_weight="1"
+                    android:layout_margin="5dp">
+                    <ImageView
+                        android:id="@+id/imageView9543"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:padding="8dp"
+                        android:layout_gravity="end"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/sj" />
+                    <TextView
+                        android:background="@drawable/yuanjiao"
+                        android:textColor="#536BF1"
+                        android:id="@+id/text_show5432"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingLeft="8dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_centerVertical="true"
+                        android:text="光电循迹模块"
+                        android:textSize="20dp"/>
+                </RelativeLayout>
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                >
+                <RelativeLayout
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="@drawable/yuanjiao"
+                    android:padding="5dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_above="@id/switch2"
+                    android:layout_margin="5dp">
+                    <ImageView
+                        android:id="@+id/imageView39"
+                        android:layout_width="50dp"
+                        android:padding="5dp"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/hj" />
+                </RelativeLayout>
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:id="@+id/switch2"
+                    android:layout_height="60dp"
+                    android:background="@drawable/yuanjiao"
+                    android:padding="5dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+
+                    android:layout_margin="5dp">
+                    <ImageButton
+                        android:id="@+id/imageView379"
+                        android:layout_width="50dp"
+                        android:padding="5dp"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
+                        android:layout_centerVertical="true"
+                        android:background="@drawable/b2"
+                       />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="@drawable/yuanjiao"
+                    android:padding="5dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_below="@id/switch2"
+                    android:layout_margin="5dp">
+                    <ImageView
+                        android:id="@+id/imageView319"
+                        android:layout_width="50dp"
+                        android:padding="5dp"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
+                        android:layout_centerVertical="true"
+                        android:rotation="180"
+                        android:src="@drawable/hj" />
+                </RelativeLayout>
+                <RelativeLayout
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="@drawable/yuanjiao"
+                    android:padding="5dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_toLeftOf="@id/switch2"
+                    android:layout_margin="5dp">
+                    <ImageView
+                        android:id="@+id/imageView3419"
+                        android:layout_width="50dp"
+                        android:padding="5dp"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
+                        android:layout_centerVertical="true"
+                        android:rotation="270"
+                        android:src="@drawable/light" />
+                </RelativeLayout>
+                <RelativeLayout
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:background="@drawable/yuanjiao"
+                    android:padding="5dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@id/switch2"
+                    android:layout_margin="5dp">
+                    <ImageView
+                        android:id="@+id/imageView3319"
+                        android:layout_width="50dp"
+                        android:padding="5dp"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
+                        android:layout_centerVertical="true"
+                        android:rotation="90"
+                        android:src="@drawable/light" />
+                </RelativeLayout>
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+</TableLayout>
